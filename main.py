@@ -20,10 +20,10 @@ def read(direc):
 
 doc = read(r"C:\Users\sathy\Preg\Preg-chatbot\Journey_of_The_First_1000_Days.pdf")
 
-def chunking(docs,chunk_size=256,chunk_overlap = 50):
+def chunking(docs,chunk_size=1000,chunk_overlap = 100):
     split = RecursiveCharacterTextSplitter(chunk_size = chunk_size, chunk_overlap=chunk_overlap)
-    doc = split.split_documents(docs)
-    return docs
+    return split.split_documents(docs)
+split_docs = chunking(doc)
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/sathy/Downloads/preg-bot-463313-44ca92552e99.json"
 embedding = GoogleGenerativeAIEmbeddings(model= "models/gemini-embedding-exp-03-07")
@@ -32,6 +32,7 @@ embedding = GoogleGenerativeAIEmbeddings(model= "models/gemini-embedding-exp-03-
 #print(len(vector))
 
 api_key = "pcsk_3rvtmR_3uGwGmzHeMK4YWt3mQMouSQjf8MhogGxbTVyuEJN7h8FLwq4ft37UCjjNDdRN1f"
+os.environ["PINECONE_API_KEY"] = api_key
 index_name = "langchainvector"
 dimension = 3072
 
@@ -50,4 +51,6 @@ if index_name not in pc.list_indexes().names():
 
 index = pc.Index(index_name)
 
-vectorstore = PineconeVectorStore(index, embedding=your_embedding_function)
+vectorstore = PineconeVectorStore.from_documents(documents=split_docs, embedding= embedding, index_name=index_name)
+
+print("PDF embedded and stored in Pinecone successfully!")
