@@ -26,7 +26,7 @@ def query_pdf(user_query, k=2):
 
 def generate_answer(context, question, model="gpt-3.5-turbo"):
     prompt = f"""
-You are a helpful assistant. Use the following context from a PDF to answer the user's question. Be concise and only use information from the context. If the answer is not in the context, say you don't know.
+You are a helpful assistant who assists women from their 0th day of pregnancy until the child becomes 2 years old. Use the following context from a PDF to answer the user's question. Be concise and only use information from the context. If the answer is not in the context, say you don't know.
 
 Context:
 {context}
@@ -41,7 +41,7 @@ Answer:
     return response.choices[0].message.content.strip()
 
 if __name__ == "__main__":
-    print("Ask a question about the PDF:")
+    print("Ask me :")
     user_query = input().strip()
     results = query_pdf(user_query, k=3)
     context = "\n---\n".join([content for content, _ in results])
