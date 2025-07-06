@@ -61,7 +61,7 @@ def query_pdf(user_query: str, k: int = 3):
 def generate_answer(context: str, question: str, model: str = "gpt-3.5-turbo"):
     try:
         prompt = f"""
-You are a helpful assistant who assists women from their 0th day of pregnancy until the child becomes 2 years old. Use the following context from a PDF to answer the user's question. Be concise and only use information from the context. If the answer is not in the context, say you don't know.
+You are a helpful assistant who assists women from their 0th day of pregnancy until the child becomes 2 years old. Use the following context from a PDF to answer the user's question. Be detailed and only use information from the context. If the answer is not in the context, say you don't know.
 
 Context:
 {context}
