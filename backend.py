@@ -93,6 +93,7 @@ async def ask_question(request: QuestionRequest):
         context = "\n---\n".join([content for content, _ in results])
         # Generate answer using the context
         answer = generate_answer(context, request.question)
+        print("Returning answer:", answer)
         return QuestionResponse(
             answer=answer,
             context=context if request.include_context else None,
