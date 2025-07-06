@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First 1000 Days Chatbot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+            background: #dc3545;
+        }
+        
+        .status-indicator.connected {
+            background: #28a745;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .bot-message {
+            background: white;
+            border: 1px solid #e9ecef;
+            color: #333;
+        }
+        
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background: white;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #questionInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #questionInput:focus {
+            border-color: #667eea;
+        }
+        
+        #askButton {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        #askButton:hover {
+            transform: translateY(-2px);
+        }
+        
+        #askButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .context-toggle {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .context-content {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: pre-wrap;
+            display: none;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤱 First 1000 Days Chatbot</h1>
+            <p>Ask questions about pregnancy and your baby's first 1000 days</p>
+            <span class="status-indicator" id="backendStatusIndicator"></span>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot-message">
+                Hello! I'm here to help you with questions about pregnancy and your baby's first 1000 days. What would you like to know?
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <div class="input-group">
+                <input type="text" id="questionInput" placeholder="Ask a question..." onkeypress="handleKeyPress(event)">
+                <button id="askButton" onclick="askQuestion()">Ask</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        const REQUEST_TIMEOUT = 30000; // 30 seconds timeout
+        
+        function addMessage(content, isUser = false, isError = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'} ${isError ? 'error' : ''}`;
+            messageDiv.textContent = content;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                askQuestion();
+            }
+        }
+        
+        async function askQuestion() {
+            const input = document.getElementById('questionInput');
+            const button = document.getElementById('askButton');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            console.log('Sending question:', question);
+            
+            // Add user message
+            addMessage(question, true);
+            input.value = '';
+            
+            // Disable input and show loading
+            input.disabled = true;
+            button.disabled = true;
+            button.innerHTML = '<div class="loading"></div>';
+            
+            try {
+                console.log('Making request to:', `${API_BASE_URL}/ask`);
+                const startTime = Date.now();
+                
+                // Create AbortController for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.log('Request timed out after', REQUEST_TIMEOUT, 'ms');
+                    controller.abort();
+                }, REQUEST_TIMEOUT);
+                
+                const response = await fetch(`${API_BASE_URL}/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        include_context: false
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const endTime = Date.now();
+                console.log('Request completed in', endTime - startTime, 'ms');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    addMessage(data.answer);
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', false, true);
+                }
+            } catch (error) {
+                console.error('Error details:', error);
+                
+                if (error.name === 'AbortError') {
+                    addMessage('Request timed out. Please try again or check your internet connection.', false, true);
+                } else if (error.message.includes('Failed to fetch')) {
+                    addMessage('Cannot connect to the server. Please make sure the backend is running on localhost:8000', false, true);
+                } else {
+                    addMessage(`Error: ${error.message}. Please try again.`, false, true);
+                }
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                button.disabled = false;
+                button.textContent = 'Ask';
+                input.focus();
+            }
+        }
+        
+        // Check if backend is running
+        async function checkBackend() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for health check
+                
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Backend status:', data);
+                    // Update status indicator
+                    const statusIndicator = document.getElementById('backendStatusIndicator');
+                    statusIndicator.classList.remove('connected');
+                    statusIndicator.classList.add('connected');
+                    // Remove any existing error messages about backend
+                    const errorMessages = document.querySelectorAll('.message.error');
+                    errorMessages.forEach(msg => {
+                        if (msg.textContent.includes('Backend server is not running')) {
+                            msg.remove();
+                        }
+                    });
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Backend not available:', error);
+                addMessage('⚠️ Backend server is not running. Please start the backend first.', false, true);
+                // Update status indicator
+                const statusIndicator = document.getElementById('backendStatusIndicator');
+                statusIndicator.classList.remove('connected');
+            }
+        }
+        
+        // Check backend status when page loads
+        window.onload = function() {
+            checkBackend();
+            // Also check every 30 seconds
+            setInterval(checkBackend, 30000);
+        };
+    </script>
+</body>
+</html>
