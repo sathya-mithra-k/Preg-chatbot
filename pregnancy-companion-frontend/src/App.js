@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import ChatMessage from './components/ChatMessage';
 import './App.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/ask';
+
 const FAQS = [
   'How is my baby developing this week?',
   'What foods should I eat?',
@@ -39,7 +41,7 @@ function App() {
     setLoading(true);
     setInput('');
     try {
-      const res = await fetch('http://localhost:8000/ask', {
+      const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: text, include_context: false })
