@@ -87,21 +87,21 @@ async def root():
 
 @app.post("/ask", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest):
-    """Ask a question and get an answer using RAG"""
     try:
         # Query the PDF for relevant context
         results = query_pdf(request.question, k=3)
         context = "\n---\n".join([content for content, _ in results])
-        
         # Generate answer using the context
         answer = generate_answer(context, request.question)
-        
         return QuestionResponse(
             answer=answer,
             context=context if request.include_context else None,
             success=True
         )
     except Exception as e:
+        import traceback
+        print("Error in /ask endpoint:", e)
+        traceback.print_exc()
         return QuestionResponse(
             answer=f"Sorry, I encountered an error: {str(e)}",
             success=False
