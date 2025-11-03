@@ -14,7 +14,7 @@ pinecone_api_key = os.getenv("PINECONE_API_KEY")
 def load_and_split(pdf_path):
     loader = PyPDFLoader(pdf_path)
     docs = loader.load()
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
     return splitter.split_documents(docs)
 
 embedding = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
