@@ -12,7 +12,7 @@ load_dotenv()
 
 app = FastAPI(title="First 1000 Days Chatbot API", version="1.0.0")
 
-origin = ["http://localhost:3000",                
+origins = ["http://localhost:3000",                
     "http://localhost:5173",                
     "https://motherhood-companion.vercel.app"  
 ]
