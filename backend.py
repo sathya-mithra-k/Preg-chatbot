@@ -12,32 +12,32 @@ load_dotenv()
 
 app = FastAPI(title="First 1000 Days Chatbot API", version="1.0.0")
 
+origin = ["http://localhost:3000",                
+    "http://localhost:5173",                
+    "https://motherhood-companion.vercel.app"  
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://motherhood-companion.vercel.app"],  
+    allow_origins=origins,  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
 
 if not openai_api_key or not pinecone_api_key:
     raise ValueError("Missing required API keys. Please check your .env file.")
 
-# Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
 
-# These should match the settings used in bot.py
 index_name = "langchainvector"
 embedding = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 
-# Reconnect to the existing Pinecone vector store
 vectorstore = PineconeVectorStore(index_name=index_name, embedding=embedding)
 
-# Pydantic models for request/response
 class QuestionRequest(BaseModel):
     question: str
     include_context: bool = False
@@ -88,10 +88,8 @@ async def root():
 @app.post("/ask", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest):
     try:
-        # Query the PDF for relevant context
         results = query_pdf(request.question, k=3)
         context = "\n---\n".join([content for content, _ in results])
-        # Generate answer using the context
         answer = generate_answer(context, request.question)
         print("Returning answer:", answer)
         return QuestionResponse(
