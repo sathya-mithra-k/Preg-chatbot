@@ -40,7 +40,7 @@ vectorstore = PineconeVectorStore(index_name=index_name, embedding=embedding)
 
 class QuestionRequest(BaseModel):
     question: str
-    include_context: bool = False
+    include_context: bool = True
 
 class QuestionResponse(BaseModel):
     answer: str
